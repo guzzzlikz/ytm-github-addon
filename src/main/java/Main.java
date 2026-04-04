@@ -10,16 +10,22 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
     private static Scanner scanner;
     private static ObjectMapper objectMapper;
     private static String lastMessage = "";
+    private static List<String> emojis;
     public static void main(String[] args) throws IOException, InterruptedException {
         scanner = new Scanner(System.in);
         objectMapper = new ObjectMapper();
+        emojis = new ArrayList<>(List.of(
+                "🎶","🎵","🎼","🎧","🎤","🎹","🎸","🥁",
+                "🔥","💥","⚡","✨","🌟","💫",
+                "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎",
+                "💖","💕","💞","💓","💗","💘"
+        ));
         Config c = null;
         try {
             c = objectMapper.readValue(new File("config.json"), Config.class);
@@ -231,11 +237,12 @@ public class Main {
             }
             System.out.println("YTMD request succeeded");
             String statusMessage = "🎵 Now playing: " + song.getTitle() + " by " + song.getArtist();
+            String emoji = emojis.get((int) (Math.random() * emojis.size()));
             if (!statusMessage.equals(lastMessage)) {
                 try (AsyncHttpClient client = Dsl.asyncHttpClient()) {
                     String jsonBody = "{ \"query\": \"mutation ($input: ChangeUserStatusInput!) { changeUserStatus(input: $input) { status { message } } }\","
                             + "\"variables\": { \"input\": { \"message\": \"" + statusMessage + "\","
-                            + "\"emoji\": \"🎶\", \"limitedAvailability\": false } } }";
+                            + "\"emoji\": \"" + emoji + "\"," + "\"limitedAvailability\": false } } }";
                     Response response = client.preparePost("https://api.github.com/graphql")
                             .addHeader("Authorization", "Bearer " + gitToken)
                             .addHeader("Content-Type", "application/json")
