@@ -57,7 +57,7 @@ public static void main(String[] args) throws IOException, InterruptedException 
                             .thenApply(response -> {
                                 try {
                                     AuthResponse auth = objectMapper.readValue(response.getResponseBody(), AuthResponse.class);
-                                    return auth.getAccessToken(); // extract the token
+                                    return auth.getAccessToken();
                                 } catch (Exception eb) {
                                     System.out.println("YTMD request failed: " + eb.getMessage());
                                     return null;
