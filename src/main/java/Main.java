@@ -22,78 +22,11 @@ public static void main(String[] args) throws IOException, InterruptedException 
     ));
     c = loadConfig();
     validateConfig();
+    launchMenu();
     String ytmToken = c.getYtmToken();
     String gitToken = c.getGitToken();
     int port = c.getPort();
     String url = c.getUrl();
-    int choice = -1;
-    while (choice != 0) {
-        System.out.println("1. Check config");
-        System.out.println("2. Change YoutubeMusicDesktop token");
-        System.out.println("3. Change GitHub token");
-        System.out.println("4. Change port");
-        System.out.println("5. Change url");
-        System.out.println("0. Start");
-        choice = scanner.nextInt();
-        scanner.nextLine();
-        switch (choice) {
-            case 1 -> {
-                System.out.println("YoutubeMusicDesktop token: " + ytmToken);
-                System.out.println("GitHub token: " + gitToken);
-                System.out.println("Port: " + port);
-                System.out.println("URL: " + url);
-            }
-            case 2 -> {
-                System.out.println("old YoutubeMusicDesktop token: " + ytmToken);
-                System.out.println("Enter id (any)");
-                System.out.print("id: ");
-                String id = scanner.nextLine();
-                String token;
-                try (AsyncHttpClient client = Dsl.asyncHttpClient()) {
-                    token = client.preparePost("http://" + url + ":" + port + "/auth/" + id)
-                            .addHeader("Content-Type", "application/json")
-                            .execute()
-                            .toCompletableFuture()
-                            .thenApply(response -> {
-                                try {
-                                    AuthResponse auth = objectMapper.readValue(response.getResponseBody(), AuthResponse.class);
-                                    return auth.getAccessToken();
-                                } catch (Exception eb) {
-                                    System.out.println("YTMD request failed: " + eb.getMessage());
-                                    return null;
-                                }
-                            })
-                            .join();
-                } catch (IOException et) {
-                    throw new RuntimeException(et);
-                }
-                System.out.println("ytmToken" + token);
-                c.setYtmToken(token);
-            }
-            case 3 -> {
-                System.out.println("old GitHub token: " + gitToken);
-                System.out.print("new GitHub token: ");
-                gitToken = scanner.nextLine();
-                c.setGitToken(gitToken);
-                objectMapper.writeValue(new File("config.json"), c);
-            }
-            case 4 -> {
-                System.out.println("old Port: " + port);
-                System.out.print("new Port: ");
-                port = scanner.nextInt();
-                scanner.nextLine();
-                c.setPort(port);
-                objectMapper.writeValue(new File("config.json"), c);
-            }
-            case 5 -> {
-                System.out.println("old URL: " + url);
-                System.out.print("new URL: ");
-                url = scanner.nextLine();
-                c.setUrl(url);
-                objectMapper.writeValue(new File("config.json"), c);
-            }
-        }
-    }
     while (true) {
         StringBuilder ytmUrlBuilder = new StringBuilder();
         ytmUrlBuilder.append("http://");
@@ -268,4 +201,78 @@ private static void validateConfig() throws IOException {
         c.setUrl(url);
     }
     objectMapper.writeValue(new File("config.json"), c);
+}
+private static void launchMenu() throws IOException {
+    String ytmToken = c.getYtmToken();
+    String gitToken = c.getGitToken();
+    int port = c.getPort();
+    String url = c.getUrl();
+    int choice = -1;
+    while (choice != 0) {
+        System.out.println("1. Check config");
+        System.out.println("2. Change YoutubeMusicDesktop token");
+        System.out.println("3. Change GitHub token");
+        System.out.println("4. Change port");
+        System.out.println("5. Change url");
+        System.out.println("0. Start");
+        choice = scanner.nextInt();
+        scanner.nextLine();
+        switch (choice) {
+            case 1 -> {
+                System.out.println("YoutubeMusicDesktop token: " + ytmToken);
+                System.out.println("GitHub token: " + gitToken);
+                System.out.println("Port: " + port);
+                System.out.println("URL: " + url);
+            }
+            case 2 -> {
+                System.out.println("old YoutubeMusicDesktop token: " + ytmToken);
+                System.out.println("Enter id (any)");
+                System.out.print("id: ");
+                String id = scanner.nextLine();
+                String token;
+                try (AsyncHttpClient client = Dsl.asyncHttpClient()) {
+                    token = client.preparePost("http://" + url + ":" + port + "/auth/" + id)
+                            .addHeader("Content-Type", "application/json")
+                            .execute()
+                            .toCompletableFuture()
+                            .thenApply(response -> {
+                                try {
+                                    AuthResponse auth = objectMapper.readValue(response.getResponseBody(), AuthResponse.class);
+                                    return auth.getAccessToken();
+                                } catch (Exception eb) {
+                                    System.out.println("YTMD request failed: " + eb.getMessage());
+                                    return null;
+                                }
+                            })
+                            .join();
+                } catch (IOException et) {
+                    throw new RuntimeException(et);
+                }
+                System.out.println("ytmToken" + token);
+                c.setYtmToken(token);
+            }
+            case 3 -> {
+                System.out.println("old GitHub token: " + gitToken);
+                System.out.print("new GitHub token: ");
+                gitToken = scanner.nextLine();
+                c.setGitToken(gitToken);
+                objectMapper.writeValue(new File("config.json"), c);
+            }
+            case 4 -> {
+                System.out.println("old Port: " + port);
+                System.out.print("new Port: ");
+                port = scanner.nextInt();
+                scanner.nextLine();
+                c.setPort(port);
+                objectMapper.writeValue(new File("config.json"), c);
+            }
+            case 5 -> {
+                System.out.println("old URL: " + url);
+                System.out.print("new URL: ");
+                url = scanner.nextLine();
+                c.setUrl(url);
+                objectMapper.writeValue(new File("config.json"), c);
+            }
+        }
+    }
 }
