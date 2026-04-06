@@ -15,21 +15,23 @@ public class ApiThread extends Thread {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private String lastMessage = "";
     private final Logger logger = new Logger();
+    private int emojiId;
+    private static final List<String> emojis = new ArrayList<>(List.of(
+            "🎶", "🎵", "🎼", "🎧", "🎤", "🎹", "🎸", "🥁",
+            "🔥", "💥", "⚡", "✨", "🌟", "💫",
+            "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎",
+            "💖", "💕", "💞", "💓", "💗", "💘", "🕊️"
+    ));
 
-    public ApiThread(String ytmUrl, String ytmToken, String gitToken) {
+    public ApiThread(String ytmUrl, String ytmToken, String gitToken, int emojiId) {
         this.ytmUrl = ytmUrl;
         this.ytmToken = ytmToken;
         this.gitToken = gitToken;
+        this.emojiId = emojiId;
     }
 
     @Override
     public void run() {
-        List<String> emojis = new ArrayList<>(List.of(
-                "🎶", "🎵", "🎼", "🎧", "🎤", "🎹", "🎸", "🥁",
-                "🔥", "💥", "⚡", "✨", "🌟", "💫",
-                "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎",
-                "💖", "💕", "💞", "💓", "💗", "💘"
-        ));
         while (true) {
             Song song = formSongFromRequest(ytmUrl, ytmToken);
             if (song == null) {
@@ -37,7 +39,12 @@ public class ApiThread extends Thread {
                 break;
             }
             String statusMessage = "🎵 Now playing: " + song.getTitle() + " by " + song.getArtist();
-            String emoji = emojis.get((int) (Math.random() * emojis.size()));
+            String emoji;
+            if (emojiId == -1) {
+                emoji = emojis.get((int) (Math.random() * emojis.size()));
+            } else {
+                emoji = emojis.get(emojiId);
+            }
             if (!statusMessage.equals(lastMessage)) {
                 sendSongToGitHub(statusMessage, emoji, gitToken);
             }

@@ -17,6 +17,13 @@ public class Main {
     private static Config c;
     private static ApiThread apiThread;
     private static final Logger logger = new Logger();
+    private static final List<String> emojis = new ArrayList<>(List.of(
+            "🎶", "🎵", "🎼", "🎧", "🎤", "🎹", "🎸", "🥁",
+            "🔥", "💥", "⚡", "✨", "🌟", "💫",
+            "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎",
+            "💖", "💕", "💞", "💓", "💗", "💘", "🕊️"
+    ));
+    private static int emojiId = 0;
     public static void main(String[] args) throws IOException, InterruptedException {
         scanner = new Scanner(System.in);
         objectMapper = new ObjectMapper();
@@ -160,6 +167,7 @@ public class Main {
             logger.logln("3. Change GitHub token");
             logger.logln("4. Change port");
             logger.logln("5. Change url");
+            logger.logln("6. Pick emoji (not optional, otherwise random will be selected)");
             logger.logln("0. Start");
             logger.log("");
             choice = scanner.nextInt();
@@ -221,6 +229,17 @@ public class Main {
                     c.setUrl(url);
                     objectMapper.writeValue(new File("config.json"), c);
                 }
+                case 6 -> {
+                    for (int i = 0; i < 5; ++i) {
+                        for (int j = 0; j < 6; ++j) {
+                            System.out.print(i * 6 + j + 1 + "." + emojis.get(i * 6 + j) + " ");
+                        }
+                        System.out.println();
+                    }
+                    logger.logln("Select emoji (or 0 if you want them to be random)");
+                    emojiId = scanner.nextInt();
+                    scanner.nextLine();
+                }
             }
         }
         ytmToken = c.getYtmToken();
@@ -234,7 +253,7 @@ public class Main {
         ytmUrlBuilder.append(port);
         ytmUrlBuilder.append("/api/v1/song");
         String ytmUrl = ytmUrlBuilder.toString();
-        apiThread = new ApiThread(ytmUrl, ytmToken, gitToken);
+        apiThread = new ApiThread(ytmUrl, ytmToken, gitToken, emojiId - 1);
         apiThread.start();
         Thread.sleep(500);
     }
