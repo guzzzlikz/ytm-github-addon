@@ -14,6 +14,7 @@ public class ApiThread extends Thread {
     private String gitToken;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private String lastMessage = "";
+    private final Logger logger = new Logger();
 
     public ApiThread(String ytmUrl, String ytmToken, String gitToken) {
         this.ytmUrl = ytmUrl;
@@ -59,7 +60,7 @@ public class ApiThread extends Thread {
                         try {
                             return objectMapper.readValue(response.getResponseBody(), Song.class);
                         } catch (Exception e) {
-                            System.out.println("Reponse returned invalid body");
+                            logger.logln("Reponse returned invalid body");
                             this.interrupt();
                             return null;
                         }
@@ -73,11 +74,11 @@ public class ApiThread extends Thread {
             song = new Song();
             song.setTitle("none");
             song.setArtist("none");
-            System.out.println("Song title/artist is set to none");
+            logger.logln("Song title/artist is set to none");
             this.interrupt();
             return null;
         }
-        System.out.println("YTMD request succeeded");
+        logger.logln("YTMD request succeeded");
         return song;
     }
 
@@ -93,9 +94,9 @@ public class ApiThread extends Thread {
                     .execute()
                     .toCompletableFuture()
                     .join();
-            System.out.println("Git returned status code: " + response.getStatusCode());
+            logger.logln("Git returned status code: " + response.getStatusCode());
         } catch (Exception e) {
-            System.out.println("GitRequest failed: " + e.getMessage());
+            logger.logln("GitRequest failed: " + e.getMessage());
             this.interrupt();
         }
     }
