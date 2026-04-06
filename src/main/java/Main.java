@@ -8,91 +8,24 @@ import org.asynchttpclient.Response;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
     private static Scanner scanner;
     private static ObjectMapper objectMapper;
-    private static String lastMessage = "";
     private static Config c;
+    private static ApiThread apiThread;
     public static void main(String[] args) throws IOException, InterruptedException {
         scanner = new Scanner(System.in);
         objectMapper = new ObjectMapper();
-        List<String> emojis = new ArrayList<>(List.of(
-                "🎶", "🎵", "🎼", "🎧", "🎤", "🎹", "🎸", "🥁",
-                "🔥", "💥", "⚡", "✨", "🌟", "💫",
-                "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎",
-                "💖", "💕", "💞", "💓", "💗", "💘"
-        ));
         c = loadConfig();
         validateConfig();
         launchMenu();
-        String ytmToken = c.getYtmToken();
-        String gitToken = c.getGitToken();
-        int port = c.getPort();
-        String url = c.getUrl();
         while (true) {
-            StringBuilder ytmUrlBuilder = new StringBuilder();
-            ytmUrlBuilder.append("http://");
-            ytmUrlBuilder.append(url);
-            ytmUrlBuilder.append(":");
-            ytmUrlBuilder.append(port);
-            ytmUrlBuilder.append("/api/v1/song");
-            String ytmUrl = ytmUrlBuilder.toString();
-            Song song = formSongFromRequest(ytmUrl, ytmToken);
-            String statusMessage = "🎵 Now playing: " + song.getTitle() + " by " + song.getArtist();
-            String emoji = emojis.get((int) (Math.random() * emojis.size()));
-            if (!statusMessage.equals(lastMessage)) {
-                sendSongToGitHub(statusMessage, emoji, gitToken);
+            if (!apiThread.isAlive()) {
+                apiThread.join();
+                launchMenu();
             }
-            lastMessage = statusMessage;
-            Thread.sleep(10000);
-        }
-    }
-
-    private static Song formSongFromRequest(String url, String token) {
-        Song song;
-        try (AsyncHttpClient client = Dsl.asyncHttpClient()) {
-            song = client.prepareGet(url)
-                    .addHeader("Authorization", "Bearer " + token)
-                    .execute()
-                    .toCompletableFuture()
-                    .thenApply(response -> {
-                        try {
-                            return objectMapper.readValue(response.getResponseBody(), Song.class);
-                        } catch (Exception e) {
-                            System.out.println("Reponse returned invalid body");
-                            return null;
-                        }
-                    })
-                    .join();
-        } catch (IOException e) {
-            song = new Song();
-            song.setTitle("none");
-            song.setArtist("none");
-            System.out.println("Song title/artist is set to none");
-        }
-        System.out.println("YTMD request succeeded");
-        return song;
-    }
-
-    private static void sendSongToGitHub(String statusMessage, String emoji, String token) {
-        try (AsyncHttpClient client = Dsl.asyncHttpClient()) {
-            String jsonBody = "{ \"query\": \"mutation ($input: ChangeUserStatusInput!) { changeUserStatus(input: $input) { status { message } } }\","
-                    + "\"variables\": { \"input\": { \"message\": \"" + statusMessage + "\","
-                    + "\"emoji\": \"" + emoji + "\"," + "\"limitedAvailability\": false } } }";
-            Response response = client.preparePost("https://api.github.com/graphql")
-                    .addHeader("Authorization", "Bearer " + token)
-                    .addHeader("Content-Type", "application/json")
-                    .setBody(jsonBody)
-                    .execute()
-                    .toCompletableFuture()
-                    .join();
-            System.out.println("Git returned status code: " + response.getStatusCode());
-        } catch (Exception e) {
-            System.out.println("GitRequest failed: " + e.getMessage());
         }
     }
 
@@ -213,7 +146,7 @@ public class Main {
         objectMapper.writeValue(new File("config.json"), c);
     }
 
-    private static void launchMenu() throws IOException {
+    private static void launchMenu() throws IOException, InterruptedException {
         String ytmToken = c.getYtmToken();
         String gitToken = c.getGitToken();
         int port = c.getPort();
@@ -261,6 +194,7 @@ public class Main {
                     }
                     System.out.println("ytmToken" + token);
                     c.setYtmToken(token);
+                    objectMapper.writeValue(new File("config.json"), c);
                 }
                 case 3 -> {
                     System.out.println("old GitHub token: " + gitToken);
@@ -286,5 +220,19 @@ public class Main {
                 }
             }
         }
+        ytmToken = c.getYtmToken();
+        gitToken = c.getGitToken();
+        port = c.getPort();
+        url = c.getUrl();
+        StringBuilder ytmUrlBuilder = new StringBuilder();
+        ytmUrlBuilder.append("http://");
+        ytmUrlBuilder.append(url);
+        ytmUrlBuilder.append(":");
+        ytmUrlBuilder.append(port);
+        ytmUrlBuilder.append("/api/v1/song");
+        String ytmUrl = ytmUrlBuilder.toString();
+        apiThread = new ApiThread(ytmUrl, ytmToken, gitToken);
+        apiThread.start();
+        Thread.sleep(500);
     }
 }
