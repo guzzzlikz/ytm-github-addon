@@ -239,6 +239,11 @@ public class Main {
                     logger.logln("Select emoji (or 0 if you want them to be random)");
                     emojiId = scanner.nextInt();
                     scanner.nextLine();
+                    while (emojiId < 0 || emojiId > emojis.size() + 1) {
+                        logger.logln("Select emoji (or 0 if you want them to be random)");
+                        emojiId = scanner.nextInt();
+                        scanner.nextLine();
+                    }
                 }
             }
         }
