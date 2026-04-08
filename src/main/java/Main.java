@@ -32,6 +32,7 @@ public class Main {
         while (true) {
             if (!apiThread.isAlive()) {
                 apiThread.join();
+                logger.logln(apiThread.getErrorMsg());
                 launchMenu();
             }
         }
@@ -41,30 +42,30 @@ public class Main {
         try {
             c = objectMapper.readValue(new File("config.json"), Config.class);
         } catch (Exception e) {
-            logger.log("config.json not found");
+            logger.log("[!] config.json not found");
             c = new Config();
-            logger.log("GitHub token is missing, please enter it");
-            logger.log("gitToken (check README.MD): ");
+            logger.log("[!] GitHub token is missing, please enter it");
+            logger.log("[i] gitToken (check README.MD): ");
             String gitToken = scanner.nextLine();
             c.setGitToken(gitToken);
-            logger.logln("URL for YoutubeMusicDesktop is missing, please enter (or press enter and localhost will be selected)");
+            logger.logln("[!] URL for YoutubeMusicDesktop is missing, please enter (or press enter and localhost will be selected)");
             String url = scanner.nextLine();
             if (url.isEmpty()) {
                 url = "localhost";
             }
             c.setUrl(url);
-            logger.logln("Port is missing, please enter it");
-            logger.log("Port (check README.MD): ");
+            logger.logln("[!] Port is missing, please enter it");
+            logger.log("[i] Port (check README.MD): ");
             int port = scanner.nextInt();
             scanner.nextLine();
             c.setPort(port);
-            logger.logln("Is auth in YoutubeMusicDesktop enabled?");
-            logger.log("Y/N ");
+            logger.logln("[i] Is auth in YoutubeMusicDesktop enabled?");
+            logger.log("[i] Y/N ");
             String yn = scanner.nextLine().toUpperCase();
             if (yn.equals("Y")) {
                 c.setAuthEnabled(true);
-                logger.logln("Enter id (any)");
-                logger.log("id: ");
+                logger.logln("[i] Enter id (any)");
+                logger.log("[i] id: ");
                 String id = scanner.nextLine();
                 String token;
                 try (AsyncHttpClient client = Dsl.asyncHttpClient()) {
@@ -77,7 +78,7 @@ public class Main {
                                     AuthResponse auth = objectMapper.readValue(response.getResponseBody(), AuthResponse.class);
                                     return auth.getAccessToken(); // extract the token
                                 } catch (Exception eb) {
-                                    logger.logln("YTMD request failed: " + e.getMessage());
+                                    logger.logln("[X] YTMD request failed: " + e.getMessage());
                                     return null;
                                 }
                             })
@@ -85,7 +86,7 @@ public class Main {
                 } catch (IOException et) {
                     throw new RuntimeException(e);
                 }
-                logger.logln("ytmToken: " + token);
+                logger.logln("[i] ytmToken: " + token);
                 c.setYtmToken(token);
             } else {
                 c.setAuthEnabled(false);
@@ -97,13 +98,13 @@ public class Main {
 
     private static void validateConfig() throws IOException {
         while (c.getGitToken().isEmpty()) {
-            logger.logln("GitHub token is missing, please enter it");
-            logger.log("gitToken (check README.MD): ");
+            logger.logln("[!] GitHub token is missing, please enter it");
+            logger.log("[i] gitToken (check README.MD): ");
             c.setGitToken(scanner.nextLine());
         }
         while (c.getYtmToken().isEmpty() && c.isAuthEnabled()) {
-            logger.logln("Auth in YoutubeMusicDesktop is enabled, wanna disable?");
-            logger.log("Y/N ");
+            logger.logln("[!] Auth in YoutubeMusicDesktop is enabled, wanna disable?");
+            logger.log("[i] Y/N ");
             String yn = scanner.nextLine();
             if (yn.equals("N")) {
                 c.setAuthEnabled(false);
@@ -111,8 +112,8 @@ public class Main {
             } else if (yn.equals("Y")) {
                 int port = c.getPort();
                 String url = c.getUrl();
-                logger.logln("Enter id (any)");
-                logger.log("id: ");
+                logger.logln("[i] Enter id (any)");
+                logger.log("[i] id: ");
                 String id = scanner.nextLine();
                 String token;
                 try (AsyncHttpClient client = Dsl.asyncHttpClient()) {
@@ -125,7 +126,7 @@ public class Main {
                                     AuthResponse auth = objectMapper.readValue(response.getResponseBody(), AuthResponse.class);
                                     return auth.getAccessToken();
                                 } catch (Exception eb) {
-                                    logger.logln("YTMD request failed: " + eb.getMessage());
+                                    logger.logln("[X] YTMD request failed: " + eb.getMessage());
                                     return null;
                                 }
                             })
@@ -133,18 +134,18 @@ public class Main {
                 } catch (IOException et) {
                     throw new RuntimeException(et);
                 }
-                logger.logln("ytmToken: " + token);
+                logger.logln("[i] ytmToken: " + token);
                 c.setYtmToken(token);
             }
         }
         while (c.getPort() == 0) {
-            logger.logln("Port is missing, please enter it");
-            logger.log("Port (check README.MD): ");
+            logger.logln("[!] Port is missing, please enter it");
+            logger.log("[i] Port (check README.MD): ");
             c.setPort(scanner.nextInt());
             scanner.nextLine();
         }
         while (c.getUrl().isEmpty()) {
-            logger.logln("URL is missing, please enter it (or press enter to continue, localhost will be set as default)");
+            logger.logln("[!] URL is missing, please enter it (or press enter to continue, localhost will be set as default)");
             String url = scanner.nextLine();
             if (url.isEmpty()) {
                 url = "localhost";
@@ -161,27 +162,27 @@ public class Main {
         String url = c.getUrl();
         int choice = -1;
         while (choice != 0) {
-            logger.logln("1. Check config");
-            logger.logln("2. Change YoutubeMusicDesktop token");
-            logger.logln("3. Change GitHub token");
-            logger.logln("4. Change port");
-            logger.logln("5. Change url");
-            logger.logln("6. Pick emoji (not optional, otherwise random will be selected)");
-            logger.logln("0. Start");
+            logger.logln("[i] 1. Check config");
+            logger.logln("[i] 2. Change YoutubeMusicDesktop token");
+            logger.logln("[i] 3. Change GitHub token");
+            logger.logln("[i] 4. Change port");
+            logger.logln("[i] 5. Change url");
+            logger.logln("[i] 6. Pick emoji (not optional, otherwise random will be selected)");
+            logger.logln("[i] 0. Start");
             logger.log("");
             choice = scanner.nextInt();
             scanner.nextLine();
             switch (choice) {
                 case 1 -> {
-                    logger.logln("YoutubeMusicDesktop token: " + ytmToken);
-                    logger.logln("GitHub token: " + gitToken);
-                    logger.logln("Port: " + port);
-                    logger.logln("URL: " + url);
+                    logger.logln("[i] YoutubeMusicDesktop token: " + ytmToken);
+                    logger.logln("[i] GitHub token: " + gitToken);
+                    logger.logln("[i] Port: " + port);
+                    logger.logln("[i] URL: " + url);
                 }
                 case 2 -> {
-                    logger.logln("old YoutubeMusicDesktop token: " + ytmToken);
-                    logger.logln("Enter id (any)");
-                    logger.log("id: ");
+                    logger.logln("[i] old YoutubeMusicDesktop token: " + ytmToken);
+                    logger.logln("[i] Enter id (any)");
+                    logger.log("[i] id: ");
                     String id = scanner.nextLine();
                     String token;
                     try (AsyncHttpClient client = Dsl.asyncHttpClient()) {
@@ -202,44 +203,45 @@ public class Main {
                     } catch (IOException et) {
                         throw new RuntimeException(et);
                     }
-                    logger.logln("ytmToken" + token);
+                    logger.logln("[i] ytmToken" + token);
                     c.setYtmToken(token);
                     objectMapper.writeValue(new File("config.json"), c);
                 }
                 case 3 -> {
-                    logger.logln("old GitHub token: " + gitToken);
-                    logger.log("new GitHub token: ");
+                    logger.logln("[i] old GitHub token: " + gitToken);
+                    logger.log("[i] new GitHub token: ");
                     gitToken = scanner.nextLine();
                     c.setGitToken(gitToken);
                     objectMapper.writeValue(new File("config.json"), c);
                 }
                 case 4 -> {
-                    logger.logln("old Port: " + port);
-                    logger.log("new Port: ");
+                    logger.logln("[i] old Port: " + port);
+                    logger.log("[i] new Port: ");
                     port = scanner.nextInt();
                     scanner.nextLine();
                     c.setPort(port);
                     objectMapper.writeValue(new File("config.json"), c);
                 }
                 case 5 -> {
-                    logger.logln("old URL: " + url);
-                    logger.log("new URL: ");
+                    logger.logln("[i] old URL: " + url);
+                    logger.log("[i] new URL: ");
                     url = scanner.nextLine();
                     c.setUrl(url);
                     objectMapper.writeValue(new File("config.json"), c);
                 }
                 case 6 -> {
+                    logger.logln("[i] Emojis");
                     for (int i = 0; i < 5; ++i) {
                         for (int j = 0; j < 6; ++j) {
                             System.out.print(i * 6 + j + 1 + "." + emojis.get(i * 6 + j) + " ");
                         }
                         System.out.println();
                     }
-                    logger.logln("Select emoji (or 0 if you want them to be random)");
+                    logger.logln("[i] Select emoji (or 0 if you want them to be random)");
                     emojiId = scanner.nextInt();
                     scanner.nextLine();
                     while (emojiId < 0 || emojiId > emojis.size() + 1) {
-                        logger.logln("Select emoji (or 0 if you want them to be random)");
+                        logger.logln("[i] Select emoji (or 0 if you want them to be random)");
                         emojiId = scanner.nextInt();
                         scanner.nextLine();
                     }

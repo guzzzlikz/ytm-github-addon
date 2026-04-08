@@ -9,13 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ApiThread extends Thread {
-    private String ytmUrl;
-    private String ytmToken;
-    private String gitToken;
+    private final String ytmUrl;
+    private final String ytmToken;
+    private final String gitToken;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private String lastMessage = "";
     private final Logger logger = new Logger();
-    private int emojiId;
+    private final int emojiId;
+    private String errorMsg;
     private static final List<String> emojis = new ArrayList<>(List.of(
             "🎶", "🎵", "🎼", "🎧", "🎤", "🎹", "🎸", "🥁",
             "🔥", "💥", "⚡", "✨", "🌟", "💫",
@@ -32,9 +33,11 @@ public class ApiThread extends Thread {
 
     @Override
     public void run() {
+        errorMsg = "";
         while (true) {
             Song song = formSongFromRequest(ytmUrl, ytmToken);
             if (song == null) {
+                errorMsg += "[X] ApiThread was interrupted by YTMD request";
                 this.interrupt();
                 break;
             }
@@ -67,7 +70,7 @@ public class ApiThread extends Thread {
                         try {
                             return objectMapper.readValue(response.getResponseBody(), Song.class);
                         } catch (Exception e) {
-                            logger.logln("Reponse returned invalid body");
+                            logger.logln("[X] Reponse returned invalid body");
                             this.interrupt();
                             return null;
                         }
@@ -78,14 +81,10 @@ public class ApiThread extends Thread {
                 return null;
             }
         } catch (IOException e) {
-            song = new Song();
-            song.setTitle("none");
-            song.setArtist("none");
-            logger.logln("Song title/artist is set to none");
             this.interrupt();
             return null;
         }
-        logger.logln("YTMD request succeeded");
+        logger.logln("[i] YTMD request succeeded");
         return song;
     }
 
@@ -101,10 +100,14 @@ public class ApiThread extends Thread {
                     .execute()
                     .toCompletableFuture()
                     .join();
-            logger.logln("Git returned status code: " + response.getStatusCode());
+            logger.logln("[i] Git returned status code: " + response.getStatusCode());
         } catch (Exception e) {
-            logger.logln("GitRequest failed: " + e.getMessage());
+            logger.logln("[X] GitRequest failed");
+            errorMsg += "[X] ApiThread was interrupted by YTMD request";
             this.interrupt();
         }
+    }
+    public String getErrorMsg() {
+        return errorMsg;
     }
 }
