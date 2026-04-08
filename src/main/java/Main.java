@@ -1,17 +1,16 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
 import entities.AuthResponse;
 import entities.Config;
-import entities.Song;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Dsl;
-import org.asynchttpclient.Response;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
-    private static Date date;
     private static Scanner scanner;
     private static ObjectMapper objectMapper;
     private static Config c;
