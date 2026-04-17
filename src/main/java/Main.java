@@ -42,9 +42,9 @@ public class Main {
         try {
             c = objectMapper.readValue(new File("config.json"), Config.class);
         } catch (Exception e) {
-            logger.log("[!] config.json not found");
+            logger.logln("[!] config.json not found");
             c = new Config();
-            logger.log("[!] GitHub token is missing, please enter it");
+            logger.logln("[!] GitHub token is missing, please enter it");
             logger.log("[i] gitToken (check README.MD): ");
             String gitToken = scanner.nextLine();
             c.setGitToken(gitToken);
